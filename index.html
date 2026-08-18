@@ -2,83 +2,81 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Organizador Persistente con Notas CRM (Ver Nota)</title>
+  <title>Organizador Persistente con Filtro de Color</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 20px;
-      background: #f4f6f9;
-      color: #333;
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f4f6f9; color: #333; }
     h1 { text-align: center; color: #2c3e50; }
-    textarea#entrada {
-      width: 100%; height: 150px; padding: 10px;
-      border: 1px solid #ccc; border-radius: 6px;
-      font-size: 14px; margin-bottom: 10px;
-    }
-    button {
-      background: #3498db; color: white; border: none;
-      padding: 10px 15px; border-radius: 6px;
-      cursor: pointer; font-size: 14px; margin-right: 10px;
-    }
-    button:hover { background: #2980b9; }
-    input {
-      padding: 8px; width: 50%; border: 1px solid #ccc;
-      border-radius: 6px; margin-top: 10px; font-size: 14px;
-    }
-    table {
-      margin-top: 20px; border-collapse: collapse; width: 100%;
-      background: white; border-radius: 8px; overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    textarea#entrada { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
+    form#formManual { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; align-items: center; }
+    form#formManual label { font-size: 13px; color:#444; }
+    form#formManual input, form#formManual select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; }
+    .actions { margin-top: 8px; }
+    button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    button.secondary { background:#6c757d; }
+    button.danger { background:#e74c3c; }
+    button:hover { opacity: 0.95; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     th, td { border: 1px solid #eee; padding: 10px; text-align: left; position: relative; }
     th { background-color: #3498db; color: white; }
     tr:nth-child(even) { background-color: #f9f9f9; }
     td.seleccionada { outline: 2px solid #e67e22; }
-    #colorBox {
-      position: fixed; top: 20px; right: 20px;
-      background: #ffffff; border: 1px solid #ccc;
-      padding: 15px; border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2); width: 220px;
-    }
-    #colorSelect {
-      padding: 6px; border-radius: 6px; border: 1px solid #ccc;
-      font-size: 14px; margin-top: 5px; width: 100%;
-    }
-    .note-icon {
-      position: absolute;
-      right: 6px;
-      top: 6px;
-      font-size: 14px;
-      pointer-events: none;
-    }
-    /* Modal */
-    #modalOverlay {
-      display: none;
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-      align-items: center; justify-content: center; z-index: 9999;
-    }
-    #modal {
-      background: white; padding: 16px; border-radius: 8px; width: 480px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-    }
+    #colorBox { position: fixed; top: 20px; right: 20px; background: #ffffff; border: 1px solid #ccc; padding: 15px; border-radius: 8px; width: 240px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    #colorSelect { width:100%; padding:6px; border-radius:6px; }
+    .note-icon { position: absolute; right: 6px; top: 6px; font-size: 14px; pointer-events: none; }
+    #modalOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:9999; }
+    #modal { background: white; padding: 16px; border-radius: 8px; width: 480px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
     #modal textarea { width: 100%; height: 140px; padding: 8px; font-size: 14px; }
-    #modal .actions { margin-top: 8px; text-align: right; }
     .hide { display: none; }
+    .color-filter { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .color-filter label { display:flex; align-items:center; gap:6px; font-size:13px; }
+    @media (max-width:900px){ form#formManual { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width:520px){ form#formManual { grid-template-columns: 1fr; } #colorBox { position: static; width: auto; margin-top: 12px; } }
   </style>
 </head>
 <body>
-  <h1>📊 Organizador Persistente con Notas CRM</h1>
-  <p>Pega tus registros (una línea por registro, campos separados por <code>|</code>).</p>
+  <div class="container">
+    <h1>📊 Organizador Persistente</h1>
 
-  <textarea id="entrada" placeholder="Ej: 123|Enero|2024|COD|Nombre Apellido|ID|Dirección|Teléfono|VISA|CREDIT|Banco|Clase|País"></textarea>
-  <br>
-  <button id="btnAgregar">Agregar y Organizar</button>
-  <button id="btnExportar">Guardar en Excel (XLSX)</button>
+    <p>Pega registros en bloque (una línea por registro, campos separados por <code>|</code>) o usa el formulario manual para agregar uno por uno.</p>
 
-  <br><br>
-  <input type="text" id="buscador" placeholder="🔍 Buscar en la tabla..." />
-  <div id="resultado"></div>
+    <textarea id="entrada" placeholder="Ej: 123|Enero|2024|COD|Nombre Apellido|ID|Dirección|Teléfono|VISA|CREDIT|Banco|Clase|País"></textarea>
+    <div class="actions">
+      <button id="btnAgregar">Agregar y Organizar (bloque)</button>
+      <button id="btnLimpiarLocal" class="secondary">Limpiar todo (localStorage)</button>
+      <button id="btnExportar">Guardar en Excel (XLSX)</button>
+    </div>
+
+    <hr style="margin:16px 0; border:none; border-top:1px solid #e0e0e0;">
+
+    <form id="formManual" onsubmit="return false;">
+      <div><label for="f_numero">Número</label><input id="f_numero" type="text" /></div>
+      <div><label for="f_mes">Mes</label><input id="f_mes" type="text" /></div>
+      <div><label for="f_ano">Año</label><input id="f_ano" type="text" /></div>
+      <div><label for="f_codigo">Código</label><input id="f_codigo" type="text" /></div>
+
+      <div><label for="f_nombre">Nombre</label><input id="f_nombre" type="text" /></div>
+      <div><label for="f_id">ID</label><input id="f_id" type="text" /></div>
+      <div><label for="f_direccion">Dirección</label><input id="f_direccion" type="text" /></div>
+      <div><label for="f_telefono">Teléfono</label><input id="f_telefono" type="text" /></div>
+
+      <div><label for="f_marca">Marca</label><input id="f_marca" type="text" /></div>
+      <div><label for="f_tipo">Tipo</label><input id="f_tipo" type="text" /></div>
+      <div><label for="f_banco">Banco</label><input id="f_banco" type="text" /></div>
+      <div><label for="f_clase">Clase</label><input id="f_clase" type="text" /></div>
+
+      <div style="grid-column: 1 / -1;"><label for="f_pais">País</label><input id="f_pais" type="text" /></div>
+
+      <div style="grid-column: 1 / -1; display:flex; gap:8px; margin-top:6px;">
+        <button id="btnAgregarManual">Agregar registro manual</button>
+        <button id="btnLimpiarForm" class="secondary">Limpiar formulario</button>
+      </div>
+    </form>
+
+    <input type="text" id="buscador" placeholder="🔍 Buscar en la tabla..." style="margin-top:12px; width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;" />
+
+    <div id="resultado"></div>
+  </div>
 
   <div id="colorBox">
     <label for="colorSelect"><b>Color de fondo</b></label><br>
@@ -92,21 +90,35 @@
     <button id="btnVerNota" style="margin-top:8px; width:100%;">Ver nota</button>
     <button id="btnEditarNota" style="margin-top:8px; width:100%;">Editar nota</button>
     <button id="btnBorrarNota" style="margin-top:8px; width:100%;">Borrar nota</button>
+    <hr style="margin:8px 0;">
+    <button id="btnBorrarCelda" class="danger" style="width:100%;">Eliminar celda</button>
+    <button id="btnBorrarFila" class="danger" style="margin-top:8px; width:100%;">Eliminar fila</button>
+
+    <hr style="margin:8px 0;">
+    <div><b>Filtro por color</b></div>
+    <div class="color-filter">
+      <label><input type="checkbox" class="filtroColor" value="lightgreen"> Verde</label>
+      <label><input type="checkbox" class="filtroColor" value="lightcoral"> Rojo</label>
+      <label><input type="checkbox" class="filtroColor" value="lightsalmon"> Naranja</label>
+      <label><input type="checkbox" class="filtroColor" value="white"> Blanco</label>
+    </div>
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button id="btnAplicarFiltro" style="flex:1;">Aplicar filtro</button>
+      <button id="btnLimpiarFiltro" class="secondary" style="flex:1;">Limpiar</button>
+    </div>
   </div>
 
-  <!-- Modal para notas -->
   <div id="modalOverlay">
     <div id="modal">
       <h3 id="modalTitle" style="margin:0 0 8px 0;">Nota</h3>
       <textarea id="notaTexto" placeholder="Escribe la nota aquí..."></textarea>
-      <div class="actions">
+      <div class="actions" style="text-align:right; margin-top:8px;">
         <button id="btnGuardarNota">Guardar</button>
-        <button id="btnCerrarNota">Cerrar</button>
+        <button id="btnCerrarNota" class="secondary">Cerrar</button>
       </div>
     </div>
   </div>
 
-  <!-- SheetJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <script>
@@ -117,44 +129,112 @@
 
     // Elementos
     const btnAgregar = document.getElementById("btnAgregar");
+    const btnAgregarManual = document.getElementById("btnAgregarManual");
+    const btnLimpiarForm = document.getElementById("btnLimpiarForm");
+    const btnLimpiarLocal = document.getElementById("btnLimpiarLocal");
     const btnExportar = document.getElementById("btnExportar");
     const btnAplicarColor = document.getElementById("btnAplicarColor");
     const btnVerNota = document.getElementById("btnVerNota");
     const btnEditarNota = document.getElementById("btnEditarNota");
     const btnBorrarNota = document.getElementById("btnBorrarNota");
+    const btnBorrarCelda = document.getElementById("btnBorrarCelda");
+    const btnBorrarFila = document.getElementById("btnBorrarFila");
+    const btnAplicarFiltro = document.getElementById("btnAplicarFiltro");
+    const btnLimpiarFiltro = document.getElementById("btnLimpiarFiltro");
     const buscador = document.getElementById("buscador");
     const modalOverlay = document.getElementById("modalOverlay");
     const notaTexto = document.getElementById("notaTexto");
     const btnGuardarNota = document.getElementById("btnGuardarNota");
     const btnCerrarNota = document.getElementById("btnCerrarNota");
-    const modalTitle = document.getElementById("modalTitle");
 
-    // Modal mode: "view" or "edit"
-    let modalMode = "view";
+    // Form fields
+    const f_numero = document.getElementById("f_numero");
+    const f_mes = document.getElementById("f_mes");
+    const f_ano = document.getElementById("f_ano");
+    const f_codigo = document.getElementById("f_codigo");
+    const f_nombre = document.getElementById("f_nombre");
+    const f_id = document.getElementById("f_id");
+    const f_direccion = document.getElementById("f_direccion");
+    const f_telefono = document.getElementById("f_telefono");
+    const f_marca = document.getElementById("f_marca");
+    const f_tipo = document.getElementById("f_tipo");
+    const f_banco = document.getElementById("f_banco");
+    const f_clase = document.getElementById("f_clase");
+    const f_pais = document.getElementById("f_pais");
 
-    btnAgregar.addEventListener("click", organizar);
+    // Listeners
+    btnAgregar.addEventListener("click", agregarBloque);
+    btnAgregarManual.addEventListener("click", agregarManual);
+    btnLimpiarForm.addEventListener("click", limpiarFormulario);
+    btnLimpiarLocal.addEventListener("click", limpiarLocalStorage);
     btnExportar.addEventListener("click", exportarExcel);
     btnAplicarColor.addEventListener("click", cambiarColor);
     btnVerNota.addEventListener("click", () => abrirModalNota("view"));
     btnEditarNota.addEventListener("click", () => abrirModalNota("edit"));
     btnBorrarNota.addEventListener("click", borrarNotaSeleccionada);
+    btnBorrarCelda.addEventListener("click", eliminarCeldaSeleccionada);
+    btnBorrarFila.addEventListener("click", eliminarFilaSeleccionada);
+    btnAplicarFiltro.addEventListener("click", aplicarFiltroColor);
+    btnLimpiarFiltro.addEventListener("click", limpiarFiltroColor);
     buscador.addEventListener("input", filtrarTabla);
     btnGuardarNota.addEventListener("click", guardarNotaModal);
     btnCerrarNota.addEventListener("click", cerrarModal);
 
-    function organizar() {
+    // Filtro de color actual (array de valores CSS)
+    let filtroColoresSeleccionados = [];
+
+    // Funciones principales
+    function agregarBloque() {
       const texto = document.getElementById("entrada").value.trim();
       if (!texto) { alert("⚠️ No se ingresó información."); return; }
-
       const lineas = texto.split("\n").map(l => l.trim()).filter(l => l !== "");
       lineas.forEach(linea => {
         datosGuardados.push(linea);
-        tablaColores.push([]); // fila vacía de colores
-        tablaNotas.push([]);   // fila vacía de notas
+        tablaColores.push([]);
+        tablaNotas.push([]);
       });
-
       guardarTodo();
       document.getElementById("entrada").value = "";
+      mostrarTabla();
+    }
+
+    function agregarManual() {
+      const campos = [
+        f_numero.value.trim(),
+        f_mes.value.trim(),
+        f_ano.value.trim(),
+        f_codigo.value.trim(),
+        f_nombre.value.trim(),
+        f_id.value.trim(),
+        f_direccion.value.trim(),
+        f_telefono.value.trim(),
+        f_marca.value.trim(),
+        f_tipo.value.trim(),
+        f_banco.value.trim(),
+        f_clase.value.trim(),
+        f_pais.value.trim()
+      ];
+      if (campos.every(c => c === "")) { alert("⚠️ Completa al menos un campo del formulario."); return; }
+      const linea = campos.join("|");
+      datosGuardados.push(linea);
+      tablaColores.push([]);
+      tablaNotas.push([]);
+      guardarTodo();
+      limpiarFormulario();
+      mostrarTabla();
+    }
+
+    function limpiarFormulario(e) {
+      if (e) e.preventDefault();
+      [f_numero,f_mes,f_ano,f_codigo,f_nombre,f_id,f_direccion,f_telefono,f_marca,f_tipo,f_banco,f_clase,f_pais].forEach(i => i.value = "");
+    }
+
+    function limpiarLocalStorage() {
+      if (!confirm("Eliminará todos los datos guardados localmente. ¿Continuar?")) return;
+      datosGuardados = [];
+      tablaColores = [];
+      tablaNotas = [];
+      guardarTodo();
       mostrarTabla();
     }
 
@@ -225,16 +305,51 @@
         });
       });
 
+      // Aplicar filtros actuales (texto + color)
+      aplicarFiltrosCombinados();
+
       guardarTodo();
     }
 
     function filtrarTabla() {
-      const filtro = buscador.value.toLowerCase();
+      aplicarFiltrosCombinados();
+    }
+
+    // Aplica filtro de texto y color combinados
+    function aplicarFiltrosCombinados() {
+      const textoFiltro = buscador.value.toLowerCase();
       const filas = document.querySelectorAll("#tabla tbody tr");
-      filas.forEach((fila) => {
+      filas.forEach((fila, i) => {
         const textoFila = fila.textContent.toLowerCase();
-        fila.classList.toggle("hide", !textoFila.includes(filtro));
+        const pasaTexto = textoFila.includes(textoFiltro);
+        const pasaColor = filtroColoresSeleccionados.length === 0 ? true : filaTieneColorSeleccionado(i);
+        fila.classList.toggle("hide", !(pasaTexto && pasaColor));
       });
+    }
+
+    // Comprueba si la fila i tiene al menos una celda con alguno de los colores seleccionados
+    function filaTieneColorSeleccionado(i) {
+      const filaColores = tablaColores[i] || [];
+      for (let j = 0; j < filaColores.length; j++) {
+        let color = filaColores[j] || "";
+        // tratar celdas sin color como 'white' para el filtro de Blanco
+        if (color === "" && filtroColoresSeleccionados.includes("white")) return true;
+        if (filtroColoresSeleccionados.includes(color)) return true;
+      }
+      return false;
+    }
+
+    // Leer checkboxes y aplicar filtro
+    function aplicarFiltroColor() {
+      const checks = Array.from(document.querySelectorAll(".filtroColor"));
+      filtroColoresSeleccionados = checks.filter(c => c.checked).map(c => c.value);
+      aplicarFiltrosCombinados();
+    }
+
+    function limpiarFiltroColor() {
+      document.querySelectorAll(".filtroColor").forEach(c => c.checked = false);
+      filtroColoresSeleccionados = [];
+      aplicarFiltrosCombinados();
     }
 
     function cambiarColor() {
@@ -244,7 +359,6 @@
       celda.style.backgroundColor = color;
       celda.setAttribute("data-color", color);
 
-      // actualizar tablaColores
       const fila = celda.parentElement;
       const filas = Array.from(document.querySelectorAll("#tabla tbody tr"));
       const i = filas.indexOf(fila);
@@ -253,12 +367,12 @@
       if (!tablaColores[i]) tablaColores[i] = [];
       tablaColores[i][j] = color;
       guardarTodo();
+      aplicarFiltrosCombinados();
     }
 
-    // Abre modal en modo "view" o "edit"
+    // Notas
     function abrirModalNota(mode) {
       if (!window.celdaSeleccionada) { alert("⚠️ Primero selecciona una celda."); return; }
-      modalMode = mode;
       const celda = window.celdaSeleccionada;
       const nota = celda.getAttribute("data-note") || "";
       notaTexto.value = nota;
@@ -266,12 +380,12 @@
         notaTexto.setAttribute("readonly", "true");
         notaTexto.style.background = "#f5f5f5";
         btnGuardarNota.style.display = "none";
-        modalTitle.textContent = "Ver nota";
+        document.getElementById("modalTitle").textContent = "Ver nota";
       } else {
         notaTexto.removeAttribute("readonly");
         notaTexto.style.background = "";
         btnGuardarNota.style.display = "inline-block";
-        modalTitle.textContent = "Editar nota";
+        document.getElementById("modalTitle").textContent = "Editar nota";
       }
       modalOverlay.style.display = "flex";
       notaTexto.focus();
@@ -331,6 +445,58 @@
       if (existing) existing.remove();
     }
 
+    // Eliminar celda: borra contenido, color y nota; actualiza datosGuardados
+    function eliminarCeldaSeleccionada() {
+      if (!window.celdaSeleccionada) { alert("⚠️ Selecciona una celda para eliminarla."); return; }
+      if (!confirm("¿Eliminar el contenido, color y nota de la celda seleccionada?")) return;
+      const celda = window.celdaSeleccionada;
+      const fila = celda.parentElement;
+      const filas = Array.from(document.querySelectorAll("#tabla tbody tr"));
+      const i = filas.indexOf(fila);
+      const celdas = Array.from(fila.querySelectorAll("td"));
+      const j = celdas.indexOf(celda);
+      if (i === -1 || j === -1) return;
+
+      const dataIndex = j - 1;
+      const encabezadosCount = 13;
+      let campos = datosGuardados[i] ? datosGuardados[i].split("|") : [];
+      while (campos.length < encabezadosCount) campos.push("");
+      if (dataIndex >= 0 && dataIndex < encabezadosCount) {
+        campos[dataIndex] = "";
+        datosGuardados[i] = campos.join("|");
+      }
+
+      if (tablaColores[i]) tablaColores[i][j] = "";
+      if (tablaNotas[i]) tablaNotas[i][j] = "";
+
+      celda.textContent = "-";
+      celda.style.backgroundColor = "";
+      celda.removeAttribute("data-color");
+      celda.removeAttribute("data-note");
+      quitarIconoNota(celda);
+
+      guardarTodo();
+      mostrarTabla();
+    }
+
+    // Eliminar fila completa
+    function eliminarFilaSeleccionada() {
+      if (!window.celdaSeleccionada) { alert("⚠️ Selecciona una celda dentro de la fila que quieres eliminar."); return; }
+      if (!confirm("¿Eliminar la fila completa? Esta acción no se puede deshacer.")) return;
+      const celda = window.celdaSeleccionada;
+      const fila = celda.parentElement;
+      const filas = Array.from(document.querySelectorAll("#tabla tbody tr"));
+      const i = filas.indexOf(fila);
+      if (i === -1) return;
+
+      datosGuardados.splice(i, 1);
+      tablaColores.splice(i, 1);
+      tablaNotas.splice(i, 1);
+
+      guardarTodo();
+      mostrarTabla();
+    }
+
     function exportarExcel() {
       const tabla = document.getElementById("tabla");
       if (!tabla) { alert("⚠️ Primero organiza la información."); return; }
@@ -338,19 +504,15 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.table_to_sheet(tabla, {raw:true});
 
-      // Aplicar colores desde tablaColores (desplazar 1 por encabezado)
       tablaColores.forEach((filaColores, i) => {
         filaColores.forEach((color, j) => {
           if (!color) return;
-          const cellAddress = XLSX.utils.encode_cell({r: i + 1, c: j}); // +1 por encabezado
+          const cellAddress = XLSX.utils.encode_cell({r: i + 1, c: j});
           if (!ws[cellAddress]) return;
-          ws[cellAddress].s = {
-            fill: { fgColor: { rgb: convertirColor(color) } }
-          };
+          ws[cellAddress].s = { fill: { fgColor: { rgb: convertirColor(color) } } };
         });
       });
 
-      // Añadir notas como comentario en Excel (si la librería/entorno lo soporta)
       tablaNotas.forEach((filaNotas, i) => {
         filaNotas.forEach((nota, j) => {
           if (!nota) return;
@@ -373,18 +535,13 @@
     }
 
     function convertirColor(color) {
-      const mapa = {
-        "white": "FFFFFF",
-        "lightgreen": "90EE90",
-        "lightcoral": "F08080",
-        "lightsalmon": "FFA07A"
-      };
+      const mapa = { "white": "FFFFFF", "lightgreen": "90EE90", "lightcoral": "F08080", "lightsalmon": "FFA07A" };
       if (mapa[color]) return mapa[color];
-      if (color.startsWith("rgb")) {
+      if (color && color.startsWith("rgb")) {
         const nums = color.replace(/[^\d,]/g, "").split(",").map(n => parseInt(n));
         return nums.map(n => n.toString(16).padStart(2, "0")).join("").toUpperCase();
       }
-      if (color.startsWith("#")) return color.replace("#", "").toUpperCase();
+      if (color && color.startsWith("#")) return color.replace("#", "").toUpperCase();
       return "FFFFFF";
     }
 
